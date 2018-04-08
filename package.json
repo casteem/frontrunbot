@@ -1,0 +1,19 @@
+{
+  "name": "frontrun-bot",
+  "version": "0.0.1",
+  "description": "frontrun bot",
+  "main": "app.js",
+  "author": "Felix Tang",
+  "scripts": {
+    "test": "none"
+  },
+  "repository": {
+    "type": "git",
+    "url": "frontrun-bot"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "steem": "^0.7.1"
+  }
+}

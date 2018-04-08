@@ -1,0 +1,21 @@
+{
+  "rpc_nodes": [
+    "https://api.steemit.com",
+    "https://rpc.buildteam.io",
+    "https://steemd.minnowsupportproject.org",
+    "https://steemd.privex.io",
+    "https://gtg.steem.house:8090"
+  ],
+  "frontrun": {
+    "cPostInterval": 10,
+    "numPosts": 5,
+    "voteWeight": 50,
+    "VPlimit": 70
+  },
+  "backup_mode": false,
+  "disabled_mode": false,
+  "detailed_logging": true,
+  "owner_account": "tngflx",
+  "account": "name",
+  "posting_key": ""
+}
