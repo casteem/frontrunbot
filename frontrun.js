@@ -75,8 +75,21 @@ function scurate(posts) {
         authors.push(posts[i].author);
         permlinks.push(posts[i].permlink);
     }
+
+    //Calculate the actual data size comparing with numofposts to be upvoted
     min = Math.min(permlinks.length, numPosts);
-    console.log(authors, permlinks);
+
+    var Table = require('cli-table2');
+    var table = new Table({
+        head: ["index", "author", "permlinks"],
+        wordWrap: true
+    });
+
+    for (var i = 0; i < min; i++) {
+        table.push([i+1, authors[i], permlinks[i]]);
+    }
+
+    console.log(table.toString());
     myLoop();
 }
 
