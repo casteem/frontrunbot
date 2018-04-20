@@ -116,22 +116,31 @@ function myLoop(j = 0) {
     //console.log('j : ' + j + ' svote: ' + sVote, 'min: ' + min, 'numPosts: ' + numPosts + ' fvote: ' + fVote);
 }
     
+
+function sleep(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms)
+    })
+}
+
 function StartTimer() {
-    
-    let nTimer = utils.mTimer(vp);
-    let x = () => {
+    let x = async () => {
+        await getVP();
+        let nTimer = utils.mTimer(vp);
+
         if (nTimer <= 0) {
             utils.log('Time until recovery to configured VP: ' + VPlimit / 100 + ' % | ' + utils.toTimer(0))
         } else {
             utils.log('Time until recovery to configured VP: ' + VPlimit / 100 + ' % | ' + utils.toTimer(nTimer))
         }
+
         if (vp >= VPlimit) {
             clearInterval(x);
-            utils.log('VP fully replenished to the configured amount of ' + VPlimit/100 + ' %, Starting frontrun!');
+            utils.log('VP fully replenished to the configured amount of ' + VPlimit / 100 + ' %, Starting frontrun!');
             sVote = 0;
             frontRun();
         }
-        
+
     };
     setInterval(x, 10000);
 }
