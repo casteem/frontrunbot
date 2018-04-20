@@ -83,37 +83,84 @@ function scurate(posts) {
 //Keep looping until you satisfy Counter of successful votes = numposts
 //If number of successful vote met, stop the loop
 //If min=1, restart the loop with delay
-function myLoop(j = 0) {
-    //Calculate the actual data size comparing with numofposts to be upvoted
-    
-    console.log('Selected numbers of post: ' + min);
+async function myLoop(j = 0) {
+    await sleep(5000);
+    console.log('============  Selected numbers of post: ' + min + ' | Total posts: ' + permlinks.length + '========');
 
     if (min == 0) {
         utils.log("No frontrun posts at the moment")
-
+        setTimeout(frontRun, 30000);
     }
 
-    if (sVote < numPosts || fVote > min || sVote < min || sVote < fVote) {
+    if (sVote < min) {
         VoteFront(j);
-        
+
         //The condition to continue loop or not
-        if (++j < min && vp >= VPlimit) {
-            setTimeout(() => myLoop(j), 5000);
-            
-            //Reloop when max data size and if desired number of upvoted post not reached
-        } if (j == min && min <= sVote) {
-            console.log('======================================================');
-            console.log('      End of loop. Restarting with first post');
-            console.log('======================================================')
-            myLoop();
-
-        } 
-
-    } else if (sVote >= numPosts) {
-        utils.log('You have upvoted to the maximum number of post set per day');
-            StartTimer(); //Replenishing your vp
+        if (++j < permlinks.length && vp >= VPlimit) {
+            myLoop(j);
+            console.log('j1 in if loop : ' + j);
+        }
+        
     }
-    //console.log('j : ' + j + ' svote: ' + sVote, 'min: ' + min, 'numPosts: ' + numPosts + ' fvote: ' + fVote);
+}
+
+
+function VoteFront(j) {
+    if (vp >= VPlimit && numPosts !== '') {
+        steem.broadcast.vote(config.posting_key, config.account, authors[j], permlinks[j], (frontrun.voteWeight * 100),
+            function (err, result) {
+
+                if (result && !err) {
+                    sVote++;
+                    utils.log("Frontrunned posts| Author: " + authors[j] + " | Permlink: " + permlinks[j] + " | Vote weight of: " + frontrun.voteWeight + '%');
+                    utils.log('Num of failed vote: ' + fVote);
+                    utils.log('Num of successful vote: ' + sVote);
+
+                } else if (err) {
+                    fVote++;
+                    utils.log(err.message + " POST INFO | Author: " + authors[j] + " | Permlink: " + permlinks[j] + ' | Voting Power: ' + utils.format(vp / 100) + '%');
+                    utils.log('Num of failed vote: ' + fVote);
+                    utils.log('Num of successful vote: ' + sVote);
+                }
+                //if successful votes match the number setted, refront run again
+                if (sVote === min) {
+                    sVote = 0;
+                    let x = async () => {
+                        console.log('==========================================================================');
+                        console.log('                      Successfully upvoted all posts!!');
+                        console.log('==========================================================================');
+                        await sleep(10000);
+                        permlinks = [];
+                        authors = [];
+                        start();
+                    }
+                    x();
+
+                    //Reloop when max data size and if desired number of upvoted post not reached
+                } else if (sVote < min && (fVote + sVote === permlinks.length)) {
+                    fVote = 0;
+                    let x = async () => {
+                        await sleep(5000);
+                        console.log('==========================================================================');
+                        console.log('  Successful number of posts voted not met, Move on to next posts');
+                        console.log('==========================================================================');
+                        permlinks = [];
+                        authors = [];
+                        start();
+                        console.log('j in votefront: ' + j);
+                    }
+                    x();
+                }            
+            })
+
+    } else if (vp < VPlimit) {
+        utils.log('You have upvoted to the maximum number of post set per day');
+
+        utils.log('Voting Power: ' + utils.format(vp / 100) + '%' + " is too low to vote!");
+        utils.log("Author: " + authors[j] + ' | ' + 'Permlinks: ' + permlinks[j]);
+
+        StartTimer();
+    }
 }
     
 
@@ -145,50 +192,7 @@ function StartTimer() {
     setInterval(x, 10000);
 }
 
-function VoteFront(j, er) {
-    //VPlimit = 100000;
-    if (vp >= VPlimit && numPosts !== '') {
-        steem.broadcast.vote(config.posting_key, config.account, authors[j], permlinks[j], (frontrun.voteWeight * 100),
-            function (err, result) {
 
-                if (result && !err) {
-                    sVote++;
-                    utils.log("Frontrunned posts Author: " + authors[j] + " | Permlink: " + permlinks[j] + " | vote weight of: " + frontrun.voteWeight + '%');
-                    utils.log('Num of failed vote: ' + fVote);
-                    utils.log('Num of successful vote: ' + sVote);
-
-                } else if (err) {
-                    fVote++;
-                    utils.log(err.message + " POST INFO | Author: " + authors[j] + " | Permlink: " + permlinks[j] + ' | Voting Power: ' + utils.format(vp / 100) + '%');
-                    utils.log('Num of failed vote: ' + fVote);
-                    utils.log('Num of successful vote: ' + sVote);
-
-                    //if successful vote reached target, restart the whole process
-                } if (sVote + fVote == min && sVote == numPosts) {
-                    fVote = 0;
-                    setTimeout(frontRun, 10000);
-
-                   //if successful number of votes not met, reloop 
-                } if (sVote < numPosts && (sVote + fVote == min)) {
-                    fVote = 0;
-                    clearInterval(myLoop);
-                    console.log('======================================================');
-                    console.log('      End of loop. Restarting with first post');
-                    console.log('======================================================')
-                    myLoop();
-                }
-
-            });
-
-    } else if (vp < VPlimit) {
-        
-        utils.log('Voting Power: ' + utils.format(vp / 100) + '%' + " is too low to vote!");
-        utils.log("Author: " + authors[j] + ' | ' + 'Permlinks: ' + permlinks[j]);
-        utils.log('Num of failed vote: ' + fVote);
-        utils.log('Num of successful vote: ' + sVote);
-        StartTimer();
-    } 
-}
 
             
 
