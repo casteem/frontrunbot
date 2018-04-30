@@ -3,9 +3,15 @@ var FULL_CURATION_TIME = 30 * 60 * 1000;
 var api_url = 'https://steembottracker.net';
 var fs = require('fs');
 var steem = require('steem');
-var utils = require('./utils');
+
+var fs = require('fs');
+var path = require('path');
+//var jsonPath = path.join(__dirname, '..', 'frontrun', 'fconfig.json');
+//var utilPath = path.join(__dirname, '..', 'frontrun', 'futils.js');
 var config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+var utils = require('./utils');
 var frontrun = config.frontrun;
+
 var cPostInterval = frontrun.cPostInterval * 1000;
 var VPlimit = frontrun.VPlimit * 100;
 var numPosts = frontrun.numPosts;
@@ -17,10 +23,15 @@ var permlinks = [];
 var vp;
 var account = null;
 var min;
+var posts;
 
+start();
+async function start() {
+    await getVP();
+    frontRun();
+}
 
-getVote();
-function getVote() {
+function getVP() {
     steem.api.getAccounts([config.account], function (err, result) {
         if (result) {
             account = result[0];
@@ -30,13 +41,11 @@ function getVote() {
 }
 
 
-frontRun();
-
 function frontRun() {
     axios
         .get(api_url + '/posts')
         .then(data => {
-            var posts = data.data;
+            posts = data.data;
 
             var num_loaded = 0;
             posts.forEach(function (post) {
@@ -85,19 +94,24 @@ function scurate(posts) {
         wordWrap: true
     });
 
-    for (var i = 0; i < min; i++) {
+    for (var i = 0; i < permlinks.length; i++) {
         table.push([i+1, authors[i], permlinks[i]]);
     }
 
     console.log(table.toString());
-    myLoop();
+    myLoop(j = 0);
+    sVote = 0;
+    fVote = 0;
 }
 
 //Keep looping until you satisfy Counter of successful votes = numposts
 //If number of successful vote met, stop the loop
 //If min=1, restart the loop with delay
+
 async function myLoop(j = 0) {
     await sleep(5000);
+    getVP();
+
     console.log('============  Selected numbers of post: ' + min + ' | Total posts: ' + permlinks.length + '========');
 
     if (min == 0) {
@@ -107,11 +121,12 @@ async function myLoop(j = 0) {
 
     if (sVote < min) {
         VoteFront(j);
+        console.log('j1 in mainloop '+ j)
 
         //The condition to continue loop or not
-        if (++j < permlinks.length && vp >= VPlimit) {
+        if (++j < permlinks.length && vp >= VPlimit && sVote < min) {
             myLoop(j);
-            console.log('j1 in if loop : ' + j);
+            console.log('j2 in myloop : ' + j);
         }
         
     }
@@ -137,30 +152,28 @@ function VoteFront(j) {
                 }
                 //if successful votes match the number setted, refront run again
                 if (sVote === min) {
-                    sVote = 0;
                     let x = async () => {
                         console.log('==========================================================================');
                         console.log('                      Successfully upvoted all posts!!');
                         console.log('==========================================================================');
                         await sleep(10000);
-                        permlinks = [];
-                        authors = [];
+                        authors.length = 0;
+                        permlinks.length = 0;
                         start();
+                        console.log('j3 in sucess upvote all: ' + j);
                     }
                     x();
 
                     //Reloop when max data size and if desired number of upvoted post not reached
                 } else if (sVote < min && (fVote + sVote === permlinks.length)) {
-                    fVote = 0;
                     let x = async () => {
                         await sleep(5000);
                         console.log('==========================================================================');
-                        console.log('  Successful number of posts voted not met, Move on to next posts');
+                        console.log('          End of available posts, Refetching new posts to upvote');
                         console.log('==========================================================================');
-                        permlinks = [];
-                        authors = [];
+                        authors.length = 0;
+                        permlinks.length = 0;
                         start();
-                        console.log('j in votefront: ' + j);
                     }
                     x();
                 }            
@@ -175,7 +188,6 @@ function VoteFront(j) {
         StartTimer();
     }
 }
-    
 
 function sleep(ms) {
     return new Promise(resolve => {
@@ -189,27 +201,24 @@ function StartTimer() {
         let nTimer = utils.mTimer(vp);
 
         if (nTimer <= 0) {
-            utils.log('Time until recovery to configured VP: ' + VPlimit / 100 + ' % | ' + utils.toTimer(0))
+            utils.log('Time until recovery to configured VP: ' + VPlimit / 100 + ' % | ' + utils.toTimer(0) + ' | Voting Power: ' + vp)
         } else {
-            utils.log('Time until recovery to configured VP: ' + VPlimit / 100 + ' % | ' + utils.toTimer(nTimer))
+            utils.log('Time until recovery to configured VP: ' + VPlimit / 100 + ' % | ' + utils.toTimer(nTimer) + ' | Voting Power: ' + vp)
         }
 
         if (vp >= VPlimit) {
-            clearInterval(x);
+            clearInterval(y);
             utils.log('VP fully replenished to the configured amount of ' + VPlimit / 100 + ' %, Starting frontrun!');
             sVote = 0;
+            authors.length = 0;            
+            permlinks.length = 0;
             frontRun();
         }
 
     };
-    setInterval(x, 10000);
+    var y = setInterval(x, 10000);
 }
 
-
-
             
-
-
-
 
 
