@@ -218,7 +218,3 @@ function StartTimer() {
     };
     var y = setInterval(x, 10000);
 }
-
-            
-
-
