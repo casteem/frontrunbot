@@ -7,15 +7,15 @@
     "https://gtg.steem.house:8090"
   ],
   "frontrun": {
-    "cPostInterval": 10,
+    "cPostInterval": 30,
     "numPosts": 5,
     "voteWeight": 50,
-    "VPlimit": 70
+    "VPlimit": 93
   },
   "backup_mode": false,
   "disabled_mode": false,
   "detailed_logging": true,
-  "owner_account": "tngflx",
+  "owner_account": "steem.racing",
   "account": "name",
   "posting_key": ""
 }
