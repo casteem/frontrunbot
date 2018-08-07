@@ -16,6 +16,6 @@
   "disabled_mode": false,
   "detailed_logging": true,
   "owner_account": "steem.racing",
-  "account": "name",
+  "account": "trustbot",
   "posting_key": ""
 }
