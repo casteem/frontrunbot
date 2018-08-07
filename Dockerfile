@@ -1,4 +1,4 @@
-FROM node:10-alpine
+FROM node:8-alpine
 
 ARG SOURCE_COMMIT
 ENV SOURCE_COMMIT ${SOURCE_COMMIT}
